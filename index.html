@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#0b0d10">
+<meta name="description" content="Kumpulan tools sederhana buat sehari-hari, khusus HP.">
+<title>Tools Kecil</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- HALAMAN UTAMA -->
+  <section class="view" id="hub">
+    <div class="brand">
+      <span class="dot"></span><b>tools kecil</b>
+      <a class="donate" id="donate" href="#" target="_blank" rel="noopener noreferrer" hidden>☕ Donasi</a>
+    </div>
+    <h1>Alat sederhana<br>buat sehari-hari.</h1>
+    <p class="sub">Buka, pakai, selesai. Tanpa daftar, tanpa ribet.</p>
+    <div class="grid" id="grid"></div>
+    <p class="foot">🔒 Semua data tersimpan di HP kamu sendiri, tidak dikirim ke mana-mana. Tiap tool punya menu <b>⋯</b> untuk backup.</p>
+  </section>
+
+  <!-- HALAMAN TOOL -->
+  <section class="view" id="tool">
+    <div class="top">
+      <button class="back" id="back" aria-label="Kembali">‹</button>
+      <h2 id="toolTitle"></h2>
+      <button class="menu" id="menuBtn" aria-label="Menu">⋯</button>
+    </div>
+    <p class="tdesc" id="toolDesc"></p>
+    <div id="toolBody"></div>
+  </section>
+
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"><div class="box" id="sheetBox"></div></div>
+<div class="toast" id="toast"><span id="toastMsg"></span><button id="undo">Urungkan</button></div>
+
+<script src="config.js"></script>
+<script src="assets/app.js"></script>
+
+<!-- ========== DAFTAR TOOLS ========== -->
+<script src="tools/belanja.js"></script>
+<!-- tool baru: tambahkan satu baris <script src="tools/namatool.js"></script> di sini -->
+
+<script>App.start();</script>
+</body>
+</html>
