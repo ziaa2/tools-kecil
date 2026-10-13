@@ -2,5 +2,5 @@
 window.SITE = {
   // Ganti USERNAMEKAMU dengan username Saweria kamu.
   // Kosongkan ('') kalau tidak mau menampilkan tombol donasi.
-  saweria: 'https://saweria.co/USERNAMEKAMU'
+  saweria: 'https://saweria.co/maszaxx'
 };
