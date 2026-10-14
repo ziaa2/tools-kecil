@@ -102,16 +102,67 @@
     document.querySelectorAll('.view').forEach(function(v){ v.classList.toggle('on', v.id === id); });
     window.scrollTo(0, 0);
   }
+  /* ---------- halaman utama: pencarian, favorit, riwayat ---------- */
+  var hubState = { fav: [], recent: [] };
+  var query = '';
+  var SOON = '<div class="card soon"><div class="ic">＋</div><h3>Segera hadir</h3><p>Tool berikutnya</p></div>';
+
+  function saveHub(){ store('hub').set(hubState); }
+  function toolById(id){ return TOOLS.filter(function(t){ return t.id === id; })[0]; }
+  function isFav(id){ return hubState.fav.indexOf(id) > -1; }
+  function touchRecent(id){
+    hubState.recent = [id].concat(hubState.recent.filter(function(x){ return x !== id; })).slice(0, 4);
+    saveHub();
+  }
+  function toggleFav(id){
+    if(isFav(id)) hubState.fav = hubState.fav.filter(function(x){ return x !== id; });
+    else hubState.fav.push(id);
+    saveHub(); buzz(8); renderHub();
+  }
+  function openTool(id){
+    fromHub = true; buzz(8);
+    location.hash = '#/' + id;
+  }
+  function matches(t, q){
+    var hay = (t.title + ' ' + (t.desc || '') + ' ' + t.id + ' ' + (t.keywords || '')).toLowerCase();
+    return q.split(/\s+/).every(function(w){ return hay.indexOf(w) > -1; });
+  }
+  function cardHtml(t){
+    var badge = '';
+    try{ badge = t.badge ? t.badge() : ''; }catch(e){}
+    var f = isFav(t.id);
+    return '<div class="card live" role="button" tabindex="0" data-id="' + esc(t.id) + '">' +
+      '<button class="star' + (f ? ' on' : '') + '" data-star="' + esc(t.id) + '" aria-label="' + (f ? 'Hapus dari favorit' : 'Jadikan favorit') + '">' + (f ? '★' : '☆') + '</button>' +
+      '<div class="ic">' + t.icon + '</div>' +
+      (badge ? '<span class="badge">' + esc(badge) + '</span>' : '') +
+      '<h3>' + esc(t.title) + '</h3></div>';
+  }
+  function chipHtml(t){
+    return '<button class="rchip" data-open="' + esc(t.id) + '"><span>' + t.icon + '</span>' + esc(t.title) + '</button>';
+  }
+  function filteredTools(){
+    var q = query.trim().toLowerCase();
+    return q ? TOOLS.filter(function(t){ return matches(t, q); }) : [];
+  }
   function renderHub(){
-    var html = TOOLS.map(function(t){
-      var badge = '';
-      try{ badge = t.badge ? t.badge() : ''; }catch(e){}
-      return '<button class="card live" data-id="' + esc(t.id) + '"><div class="ic">' + t.icon + '</div>' +
-        (badge ? '<span class="badge">' + esc(badge) + '</span>' : '') +
-        '<h3>' + esc(t.title) + '</h3></button>';
-    }).join('');
-    html += '<div class="card soon"><div class="ic">＋</div><h3>Segera hadir</h3><p>Tool berikutnya</p></div>';
-    $('grid').innerHTML = html;
+    var q = query.trim().toLowerCase(), html = '';
+    if(q){
+      var found = filteredTools();
+      html = found.length
+        ? '<p class="sec">' + found.length + ' hasil</p><div class="grid">' + found.map(cardHtml).join('') + '</div>'
+        : '<div class="nores"><b>🔍</b>Tidak ada tool yang cocok.<br>Coba kata lain.</div>';
+    }else{
+      var recent = hubState.recent.map(toolById).filter(Boolean);
+      var favs = hubState.fav.map(toolById).filter(Boolean);
+      var rest = TOOLS.filter(function(t){ return !isFav(t.id); });
+      if(recent.length){
+        html += '<div class="sec">Terakhir dipakai<button class="sec-act" data-clear="recent">Hapus</button></div>' +
+          '<div class="recent">' + recent.map(chipHtml).join('') + '</div>';
+      }
+      if(favs.length) html += '<p class="sec">⭐ Favorit</p><div class="grid">' + favs.map(cardHtml).join('') + '</div>';
+      html += '<p class="sec">' + (favs.length ? 'Tool lainnya' : 'Semua tool') + '</p><div class="grid">' + rest.map(cardHtml).join('') + SOON + '</div>';
+    }
+    $('hubBody').innerHTML = html;
   }
 
   /* ---------- menu ⋯ ---------- */
@@ -175,10 +226,12 @@
     var tool = m && TOOLS.filter(function(t){ return t.id === m[1]; })[0];
     if(!tool){
       fromHub = false;
+      query = ''; $('search').value = ''; $('searchClear').hidden = true;
       renderHub();
       show('hub');
       return;
     }
+    touchRecent(tool.id);
     $('toolTitle').textContent = tool.title;
     $('toolDesc').textContent = tool.desc || '';
     $('toolBody').innerHTML = '';
@@ -193,10 +246,41 @@
     var url = window.SITE && window.SITE.saweria;
     if(url){ $('donate').href = url; $('donate').hidden = false; }
 
-    $('grid').addEventListener('click', function(e){
-      var c = e.target.closest('.card.live'); if(!c) return;
-      fromHub = true; buzz(8);
-      location.hash = '#/' + c.dataset.id;
+    /* favorit & riwayat tersimpan */
+    var hs = store('hub').get({});
+    hubState = { fav: Array.isArray(hs.fav) ? hs.fav : [], recent: Array.isArray(hs.recent) ? hs.recent : [] };
+
+    /* pencarian instan */
+    $('search').addEventListener('input', function(){
+      query = this.value;
+      $('searchClear').hidden = !query;
+      renderHub();
+    });
+    $('search').addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){
+        var first = filteredTools()[0];
+        if(first){ this.blur(); openTool(first.id); }
+      }
+    });
+    $('searchClear').onclick = function(){
+      query = ''; $('search').value = ''; this.hidden = true;
+      renderHub(); $('search').focus();
+    };
+
+    /* kartu, bintang favorit, chip riwayat */
+    $('hubBody').addEventListener('click', function(e){
+      var s = e.target.closest('[data-star]');
+      if(s){ toggleFav(s.dataset.star); return; }
+      if(e.target.closest('[data-clear]')){ hubState.recent = []; saveHub(); renderHub(); return; }
+      var r = e.target.closest('[data-open]');
+      if(r){ openTool(r.dataset.open); return; }
+      var c = e.target.closest('.card.live');
+      if(c) openTool(c.dataset.id);
+    });
+    $('hubBody').addEventListener('keydown', function(e){
+      if(e.key !== 'Enter' && e.key !== ' ') return;
+      var c = e.target.closest('.card.live');
+      if(c && e.target === c){ e.preventDefault(); openTool(c.dataset.id); }
     });
     $('back').onclick = function(){ if(fromHub){ history.back(); } else { location.replace('#/'); } };
     $('menuBtn').onclick = openMenu;
