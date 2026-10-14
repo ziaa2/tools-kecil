@@ -216,6 +216,18 @@
     sheet(true);
   }
 
+  /* ---------- statistik kunjungan (GoatCounter): hitung tool mana yang dibuka ---------- */
+  function track(path, title){
+    var tries = 0;
+    (function send(){
+      if(window.goatcounter && typeof window.goatcounter.count === 'function'){
+        try{ window.goatcounter.count({ path: path, title: title }); }catch(e){}
+      }else if(tries++ < 12){
+        setTimeout(send, 500);      // skrip statistik masih dimuat, coba lagi sebentar
+      }
+    })();
+  }
+
   /* ---------- router ---------- */
   function route(){
     if(current && current.destroy) current.destroy();
@@ -232,6 +244,7 @@
       return;
     }
     touchRecent(tool.id);
+    track('/tool/' + tool.id, tool.title);
     $('toolTitle').textContent = tool.title;
     $('toolDesc').textContent = tool.desc || '';
     $('toolBody').innerHTML = '';
