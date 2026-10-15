@@ -13,7 +13,7 @@
 
   App.registerTool({
     id: 'receh',
-    icon: '🪙',
+    icon: '💰',
     title: 'Catet Receh',
     desc: 'Pencet nominalnya, langsung tercatat. Buat pengeluaran dadakan: parkir, jajan, uang kecil lainnya.',
 
@@ -169,7 +169,7 @@
           },
           text: function(){
             var td = todayList().sort(function(a, b){ return a.t - b.t; });
-            var lines = ['🪙 Pengeluaran receh — ' + tanggal, ''];
+            var lines = ['💰 Pengeluaran receh — ' + tanggal, ''];
             td.forEach(function(e){ lines.push(hm(e.t) + '  ' + api.rp(e.amt)); });
             lines.push('', 'Total hari ini: ' + api.rp(sum(td)));
             return lines.join('\n');

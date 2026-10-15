@@ -44,7 +44,7 @@ App.registerTool({
     '.empty{text-align:center;color:var(--muted);padding:44px 10px;font-size:15px;line-height:1.5}' +
     '.empty .em{font-size:38px;display:block;margin-bottom:8px;opacity:.8}' +
     '.addbar{position:fixed;left:0;right:0;bottom:0;padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--line);z-index:5}' +
-    '.addwrap{max-width:480px;margin:0 auto}' +
+    '.addwrap{max-width:560px;margin:0 auto}' +
     '.sugg{display:flex;gap:6px;overflow-x:auto;padding:0 0 8px;scrollbar-width:none}' +
     '.sugg::-webkit-scrollbar{display:none}' +
     '.sugg-l{flex:none;align-self:center;color:var(--muted);font-size:12px;padding-right:2px}' +

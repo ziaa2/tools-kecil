@@ -64,7 +64,7 @@
       '.l-empty{text-align:center;color:var(--muted);padding:44px 10px;font-size:15px;line-height:1.5}' +
       '.l-empty b{display:block;font-size:38px;margin-bottom:8px;font-weight:400}' +
       '.l-bar{position:fixed;left:0;right:0;bottom:0;padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--line);z-index:5}' +
-      '.l-wrap{max-width:480px;margin:0 auto}' +
+      '.l-wrap{max-width:560px;margin:0 auto}' +
       '.l-hint{margin:0 0 8px;font-size:12px;color:var(--muted);text-align:center}' +
       '.l-hint button{color:var(--accent);padding:0 2px}' +
       '.l-det{display:none;gap:8px;margin-bottom:8px}' +

@@ -121,8 +121,16 @@ App.registerTool({
         return;
       }
       var qr;
-      try{ qr = QRCode.encode(current.value, 'M'); }
-      catch(e){ out.innerHTML = '<div class="q-err">Teks terlalu panjang untuk dijadikan QR.</div>'; current = null; return; }
+      var errMsg = '';
+      if(typeof QRCode === 'undefined'){
+        errMsg = 'File <b>assets/qrcode.js</b> belum terpasang atau gagal dimuat. Pastikan sudah diunggah dan ada di <b>index.html</b>.';
+      }else{
+        try{ qr = QRCode.encode(current.value, 'M'); }
+        catch(e){
+          errMsg = /panjang/i.test(e && e.message) ? 'Teks terlalu panjang untuk dijadikan QR.' : 'Gagal membuat QR: ' + api.esc((e && e.message) || e);
+        }
+      }
+      if(errMsg){ out.innerHTML = '<div class="q-err">' + errMsg + '</div>'; current = null; return; }
 
       out.innerHTML =
         '<div class="q-card"><canvas id="q-cv" aria-label="QR code"></canvas></div>' +

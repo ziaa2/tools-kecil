@@ -52,7 +52,7 @@
       '.n-empty{text-align:center;color:var(--muted);padding:44px 10px;font-size:15px;line-height:1.5}' +
       '.n-empty b{display:block;font-size:38px;margin-bottom:8px;font-weight:400}' +
       '.n-bar{position:fixed;left:0;right:0;bottom:0;padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--line);z-index:5}' +
-      '.n-in{max-width:480px;margin:0 auto;display:flex;gap:8px;align-items:flex-end;background:var(--surface2);border:1px solid var(--line);border-radius:18px;padding:6px}' +
+      '.n-in{max-width:560px;margin:0 auto;display:flex;gap:8px;align-items:flex-end;background:var(--surface2);border:1px solid var(--line);border-radius:18px;padding:6px}' +
       '.n-in:focus-within{border-color:var(--accent)}' +
       '.n-in textarea{flex:1;min-width:0;background:none;border:0;outline:0;resize:none;padding:11px 8px;font:inherit;font-size:16px;line-height:1.35;color:var(--text);max-height:120px}' +
       '.n-add{width:46px;height:46px;flex:none;border-radius:14px;background:var(--accent);color:var(--accent-ink);font-size:24px;font-weight:600;display:grid;place-items:center}' +
@@ -127,6 +127,7 @@
       }
       L('n-add').onclick = add;
       L('n-new').addEventListener('input', function(){ grow(this); });
+      L('n-new').addEventListener('keydown', function(e){ if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); add(); } });
       L('n-q').addEventListener('input', function(){ q = this.value.trim().toLowerCase(); flushEdit(); render(); });
 
       L('n-list').addEventListener('click', function(e){
