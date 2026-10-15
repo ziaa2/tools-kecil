@@ -76,3 +76,17 @@ App.registerTool({
 ```
 
 Helper yang tersedia di `api`: `store`, `toast`, `esc`, `rp`, `buzz`, `uid`, `today`.
+
+## Tampilan
+
+Layout menyesuaikan perangkat: HP (2 kolom), tablet, sampai layar lebar/desktop (kartu bertambah banyak, halaman tool tetap satu kolom rapi di tengah). Di komputer ada hover, fokus keyboard (Tab/Enter), Esc untuk menutup menu, dan roda mouse untuk menggeser baris chip.
+
+## Kompatibilitas perangkat
+
+Dirancang untuk semua perangkat dan browser modern: HP Android dan iPhone, tablet, serta laptop/desktop (Windows, macOS, Linux) di Chrome, Edge, Firefox, dan Safari.
+
+- Layout menyesuaikan lebar layar, termasuk HP landscape dengan poni.
+- Bar input di bagian bawah ikut naik saat keyboard HP muncul (termasuk iPhone).
+- Di komputer: mouse hover, navigasi keyboard (Tab/Enter), `Esc` menutup menu, `Ctrl+Enter` menyimpan catatan, `Spasi` mengacak palet warna.
+- Memakai emoji yang tersedia juga di Windows 10.
+- **Jangan hapus file `CNAME`** — itu yang menyambungkan domain kustom ke GitHub Pages.
