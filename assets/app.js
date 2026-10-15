@@ -100,6 +100,7 @@
   /* ---------- tampilan ---------- */
   function show(id){
     document.querySelectorAll('.view').forEach(function(v){ v.classList.toggle('on', v.id === id); });
+    document.querySelector('.app').classList.toggle('tool', id === 'tool');
     window.scrollTo(0, 0);
   }
   /* ---------- halaman utama: pencarian, favorit, riwayat ---------- */
@@ -258,6 +259,27 @@
     /* tombol donasi (opsional, diatur di config.js) */
     var url = window.SITE && window.SITE.saweria;
     if(url){ $('donate').href = url; $('donate').hidden = false; }
+
+    /* kenyamanan di komputer: Esc menutup menu, roda mouse menggeser baris chip */
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') sheet(false); });
+    document.addEventListener('wheel', function(e){
+      var el = e.target.closest && e.target.closest('.q-tabs,.l-chips,.recent,.p-modes,.sugg');
+      if(el && el.scrollWidth > el.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)){
+        el.scrollLeft += e.deltaY; e.preventDefault();
+      }
+    }, { passive: false });
+
+    /* HP: kalau keyboard menutupi bar input (iOS Safari dll), naikkan bar-nya */
+    if(window.visualViewport){
+      var vv = window.visualViewport;
+      var syncKb = function(){
+        var kb = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+        document.documentElement.style.setProperty('--kb', (kb > 80 ? kb : 0) + 'px');
+      };
+      vv.addEventListener('resize', syncKb);
+      vv.addEventListener('scroll', syncKb);
+      syncKb();
+    }
 
     /* favorit & riwayat tersimpan */
     var hs = store('hub').get({});

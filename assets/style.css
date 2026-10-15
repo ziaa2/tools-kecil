@@ -12,7 +12,8 @@ html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
 body{margin:0;height:100%;background:var(--bg);color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   -webkit-font-smoothing:antialiased}
-.app{max-width:480px;margin:0 auto;min-height:100%;padding:20px 18px 120px}
+.app{max-width:960px;margin:0 auto;min-height:100%;padding:20px 18px 120px}
+.app.tool{max-width:560px}
 .view{display:none}
 .view.on{display:block;animation:fade .2s ease}
 @keyframes fade{from{opacity:0}to{opacity:1}}
@@ -30,7 +31,7 @@ input{font:inherit;font-size:16px;color:var(--text)} /* 16px: cegah zoom otomati
 .donate:active{transform:scale(.95)}
 h1{font-size:30px;line-height:1.15;margin:0 0 6px;font-weight:650;letter-spacing:-.5px}
 .sub{color:var(--muted);font-size:15px;margin:0 0 26px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px}
 .card{position:relative;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
   padding:18px;text-align:left;display:flex;flex-direction:column;gap:8px;min-height:150px;
   transition:transform .12s,border-color .2s}
@@ -67,7 +68,7 @@ h1{font-size:30px;line-height:1.15;margin:0 0 6px;font-weight:650;letter-spacing
 .opt:active{background:var(--surface2)}
 .opt.danger{color:var(--danger)}
 .opt.cancel{color:var(--muted);text-align:center;margin-top:4px;background:var(--surface2)}
-.toast{position:fixed;left:50%;bottom:calc(200px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;
+.toast{position:fixed;left:50%;bottom:calc(200px + env(safe-area-inset-bottom,0px) + var(--kb,0px));transform:translate(-50%,20px);opacity:0;
   background:var(--text);color:#0b0d10;padding:11px 16px;border-radius:99px;font-size:14px;display:flex;gap:14px;align-items:center;
   transition:opacity .25s,transform .25s;z-index:30;pointer-events:none;max-width:92vw}
 .toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
@@ -93,3 +94,56 @@ h1{font-size:30px;line-height:1.15;margin:0 0 6px;font-weight:650;letter-spacing
 .star.on{color:#fbbf24}
 .nores{text-align:center;color:var(--muted);padding:44px 10px;font-size:15px;line-height:1.5}
 .nores b{display:block;font-size:38px;margin-bottom:8px;font-weight:400}
+
+/* ---------- RESPONSIF (HP, tablet, desktop/Windows) ---------- */
+.search{max-width:560px}
+
+/* tampilan di komputer / Windows: kursor, fokus keyboard, scrollbar */
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button,[role=button]{-webkit-user-select:none;user-select:none}
+*{scrollbar-width:thin;scrollbar-color:#2d343d transparent}
+@media (hover:hover){
+  .card.live:hover,.rchip:hover{transform:translateY(-2px)}
+  .opt:hover,.back:hover,.menu:hover{background:var(--surface2)}
+  .star:hover{color:#fbbf24}
+}
+
+/* tablet */
+@media (min-width:600px){
+  .app{padding:28px 24px 120px}
+  h1{font-size:34px}
+}
+
+/* layar lebar (laptop / desktop) */
+@media (min-width:900px){
+  .app{padding:44px 32px 120px}
+  h1{font-size:42px;letter-spacing:-1px}
+  .sub{font-size:17px;margin-bottom:30px}
+  .brand{margin-bottom:40px}
+  .card{min-height:170px;padding:20px}
+  .card h3{font-size:17px}
+  .grid{gap:16px}
+  .foot{max-width:560px}
+  .app.tool{padding-top:36px}
+}
+
+/* HP posisi landscape yang pendek */
+@media (max-height:480px) and (orientation:landscape){
+  .app{padding-top:12px}
+  .brand{margin-bottom:14px}
+}
+
+/* hormati pengguna yang mengurangi animasi */
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+
+/* ---------- LINTAS PERANGKAT ---------- */
+/* Edge/IE: hilangkan tombol "x" bawaan di kolom cari */
+.search input::-ms-clear{display:none}
+/* iPhone / Safari: bar input ikut naik saat keyboard muncul (--kb diisi oleh app.js) */
+body .addbar,body .n-bar,body .l-bar{bottom:var(--kb,0px)!important;transition:bottom .15s ease}
+/* HP landscape dengan notch: jangan tertutup poni */
+.app{padding-left:max(18px,env(safe-area-inset-left));padding-right:max(18px,env(safe-area-inset-right))}
+@media (min-width:600px){.app{padding-left:max(24px,env(safe-area-inset-left));padding-right:max(24px,env(safe-area-inset-right))}}
+@media (min-width:900px){.app{padding-left:max(32px,env(safe-area-inset-left));padding-right:max(32px,env(safe-area-inset-right))}}
