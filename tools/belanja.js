@@ -73,7 +73,40 @@ App.registerTool({
     '.vrow{display:flex;align-items:center;gap:8px;font-size:15px}' +
     '.vdot{width:10px;height:10px;border-radius:50%;background:#ef4444;flex:none;animation:vblink 1s ease-in-out infinite}' +
     '@keyframes vblink{50%{opacity:.3}}' +
-    '.vhint{color:var(--muted);font-size:12px;margin-top:6px;line-height:1.4}',
+    '.vhint{color:var(--muted);font-size:12px;margin-top:6px;line-height:1.4}' +
+    '.vs-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:30;display:grid;place-items:end center}' +
+    '.vs-card{width:100%;max-width:560px;max-height:86vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:20px 20px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom,0px))}' +
+    '.vs-card h3{margin:0 0 4px;font-size:17px}' +
+    '.vs-l{margin:14px 0 6px;font-size:12.5px;color:var(--muted)}' +
+    '.vs-o{display:block;width:100%;text-align:left;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:6px}' +
+    '.vs-o b{font-weight:600;font-size:15px}' +
+    '.vs-o small{display:block;color:var(--muted);font-size:12px;margin-top:2px;line-height:1.35}' +
+    '.vs-o.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}' +
+    '.vs-row{display:flex;gap:6px}.vs-row .vs-o{flex:1;text-align:center;margin-bottom:0}' +
+    '.vs-key{width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;outline:0;margin:2px 0 6px}' +
+    '.vs-note{font-size:12px;color:var(--muted);line-height:1.45;margin:0 0 4px}' +
+    '.vs-ok{width:100%;margin-top:16px;padding:12px;border-radius:14px;background:var(--accent);color:var(--accent-ink);font-weight:600}' +
+    '.vs-ok:disabled{opacity:.4}' +
+    '.qrow{display:flex;gap:6px;overflow-x:auto;padding:0 0 8px;scrollbar-width:none}' +
+    '.qrow::-webkit-scrollbar{display:none}' +
+    '.qb{flex:none;background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:8px 13px;font-size:13px;white-space:nowrap}' +
+    '.qb:active{background:var(--surface)}' +
+    '.hr{border:1px solid var(--line);background:var(--surface2);border-radius:12px;margin-bottom:6px;overflow:hidden}' +
+    '.hr.open{border-color:var(--accent)}' +
+    '.hr-top{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:11px 12px;text-align:left}' +
+    '.hr-n{font-size:15px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+    '.hr-m{font-size:12px;color:var(--muted);flex:none}' +
+    '.hr-ctl{padding:0 12px 12px}' +
+    '.hr-step{display:flex;align-items:center;gap:8px;margin-bottom:8px}' +
+    '.hr-step button{width:42px;height:42px;border-radius:12px;background:var(--surface);border:1px solid var(--line);font-size:20px}' +
+    '.hr-step input{width:70px;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 4px;outline:0}' +
+    '.hr-add{width:100%;padding:11px;border-radius:12px;background:var(--accent);color:var(--accent-ink);font-weight:600}' +
+    '.hr-sub{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px}' +
+    '.hr-sub select{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px;color:inherit}' +
+    '.hr-sub button{color:var(--danger);font-size:12.5px;padding:6px 4px;flex:none}' +
+    '.ps-ta{width:100%;min-height:120px;resize:vertical;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;outline:0;font:inherit;line-height:1.5;color:inherit}' +
+    '.ps-pv{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}' +
+    '.ps-pv li{background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:5px 11px;font-size:13px}',
 
   mount: function(root, api){
     var st = api.store('belanja');
@@ -89,9 +122,10 @@ App.registerTool({
       '<ul class="list" id="b-list"></ul>' +
       '<div class="addbar" id="b-addbar"><div class="addwrap">' +
         '<div class="vbox" id="b-voice"><div class="vrow"><span class="vdot"></span><span id="b-vtxt"></span></div>' +
-        '<div class="vhint">Contoh: “beras dua kilo, telur, minyak goreng”. Suara diproses lewat layanan browser (Chrome mengirimnya ke Google).</div></div>' +
+        '<div class="vhint" id="b-vhint"></div></div>' +
         '<div class="sugg" id="b-sugg"></div>' +
-        '<p class="hint"><button id="b-tp">+ isi harga</button></p>' +
+        '<div class="qrow"><button class="qb" id="b-hs">📋 Riwayat</button><button class="qb" id="b-ps">📥 Tempel daftar</button>' +
+        '<button class="qb" id="b-tp">+ isi harga</button><button class="qb" id="b-vs">🎙 ganti suara</button></div>' +
         '<div class="price-row"><input id="b-price" inputmode="numeric" placeholder="Harga satuan (opsional)"></div>' +
         '<div class="addin"><input class="iname" id="b-name" placeholder="Tulis barang…" autocomplete="off" enterkeyhint="done">' +
         '<input class="iqty" id="b-qty" inputmode="numeric" placeholder="Jml" value="1">' +
@@ -283,61 +317,365 @@ App.registerTool({
       api.toast('Ditambah: ' + names.join(', '), function(){ items = JSON.parse(snap); commit(); });
     }
 
+
+    /* ---------- pilihan suara (disimpan di HP) ---------- */
+    var vst = api.store('belanja-suara');
+    var vs = Object.assign({ engine: 'browser', mode: 'sekali', lang: 'id-ID', key: '' }, vst.get({}));
+    function saveVs(){ vst.set(vs); }
+    var mr = null, chunks = [], stream = null, autoTimer = null, vsOv = null;
+    var CONTOH = 'Contoh: “beras dua kilo, telur, minyak goreng”. ';
+
+    function setHint(){
+      L('b-vhint').textContent = vs.engine === 'whisper'
+        ? CONTOH + 'Ketuk ⏹ kalau sudah selesai. Rekaman dikirim ke Groq untuk diubah jadi teks.'
+        : (vs.mode === 'terus' ? 'Sebut beberapa barang, berhenti sendiri kalau diam. ' : 'Sebut barangnya, otomatis berhenti setelah selesai. ') +
+          CONTOH + 'Suara diproses lewat layanan browser (Chrome mengirimnya ke Google).';
+    }
     function setVoiceUi(on){
       L('b-addbar').classList.toggle('listening', on);
       L('b-mic').classList.toggle('on', on);
       L('b-mic').textContent = on ? '⏹' : '🎤';
       L('b-mic').setAttribute('aria-label', on ? 'Berhenti' : 'Bicara');
     }
-    function startVoice(){
+
+    /* --- mesin 1: browser (Web Speech API) --- */
+    function startBrowser(){
+      if(!SR){ api.toast('Browser ini tidak mendukung pengenalan suara. Coba mesin Whisper di “ganti suara”.'); return; }
       try{
         rec = new SR();
-        rec.lang = 'id-ID'; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
+        rec.lang = vs.lang; rec.continuous = (vs.mode === 'terus'); rec.interimResults = true; rec.maxAlternatives = 1;
       }catch(e){ api.toast('Suara tidak bisa dipakai di browser ini'); return; }
       processed = 0; listening = true; lastResultAt = Date.now();
       L('b-vtxt').textContent = 'Mendengarkan… sebutkan barang';
-      setVoiceUi(true); api.buzz(15);
+      setHint(); setVoiceUi(true); api.buzz(15);
       rec.onresult = function(e){
-        var interim = '';
+        var interim = '', gotFinal = false;
         for(var i = 0; i < e.results.length; i++){
           var r = e.results[i];
-          if(r.isFinal){ if(i >= processed){ processed = i + 1; handleSpeech(r[0].transcript); } }
+          if(r.isFinal){ if(i >= processed){ processed = i + 1; gotFinal = true; handleSpeech(r[0].transcript); } }
           else interim += r[0].transcript;
         }
         lastResultAt = Date.now();
+        if(gotFinal && vs.mode === 'sekali'){ listening = false; try{ rec.stop(); }catch(err){} return; }
         L('b-vtxt').textContent = interim.trim() ? '“' + interim.trim() + '”' : 'Mendengarkan… lanjut sebutkan barang';
       };
       rec.onerror = function(e){
+        var code = e && e.error;
         var msg = {
           'not-allowed': 'Izin mikrofon ditolak. Aktifkan di pengaturan browser.',
           'service-not-allowed': 'Izin mikrofon ditolak. Aktifkan di pengaturan browser.',
           'audio-capture': 'Mikrofon tidak ditemukan.',
           'network': 'Pengenalan suara butuh koneksi internet.'
-        }[e && e.error];
-        if(msg){ api.toast(msg); stopVoice(); }
+        }[code];
+        if(msg){ api.toast(msg); stopBrowser(); }
+        else if(code === 'no-speech' && vs.mode === 'sekali'){ api.toast('Tidak terdengar, coba lagi'); }
       };
       rec.onend = function(){
-        if(!listening){ setVoiceUi(false); return; }
-        if(Date.now() - lastResultAt > 12000){ stopVoice(); return; }      // lama tidak ada suara → berhenti sendiri
+        if(!listening || vs.mode === 'sekali'){ listening = false; setVoiceUi(false); return; }
+        if(Date.now() - lastResultAt > 12000){ stopBrowser(); return; }      // lama tidak ada suara → berhenti sendiri
         processed = 0;
-        try{ rec.start(); }catch(err){ stopVoice(); }
+        try{ rec.start(); }catch(err){ stopBrowser(); }
       };
-      try{ rec.start(); }catch(err){ stopVoice(); api.toast('Mikrofon sedang dipakai, coba lagi'); }
+      try{ rec.start(); }catch(err){ stopBrowser(); api.toast('Mikrofon sedang dipakai, coba lagi'); }
     }
-    function stopVoice(){
+    function stopBrowser(){
       listening = false;
       try{ if(rec) rec.stop(); }catch(e){}
       setVoiceUi(false);
     }
-    if(!SR){ L('b-mic').hidden = true; }
+
+    /* --- mesin 2: Whisper lewat Groq (rekam → kirim → teks) --- */
+    function busy(on, txt){
+      L('b-addbar').classList.toggle('listening', on);
+      if(txt) L('b-vtxt').textContent = txt;
+    }
+    function startWhisper(){
+      if(!vs.key){ api.toast('Isi API key Groq dulu'); openVoiceSettings(); return; }
+      if(!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder)){
+        api.toast('Perekam suara tidak didukung browser ini'); return;
+      }
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function(s){
+        stream = s; chunks = [];
+        mr = new MediaRecorder(s);
+        mr.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
+        mr.onstop = function(){ sendWhisper(new Blob(chunks, { type: mr.mimeType || 'audio/webm' })); };
+        mr.start();
+        listening = true; L('b-vtxt').textContent = 'Merekam… ketuk ⏹ kalau sudah selesai';
+        setHint(); setVoiceUi(true); api.buzz(15);
+        autoTimer = setTimeout(function(){ if(listening) stopWhisper(); }, 30000);   // batas 30 detik
+      }).catch(function(){ api.toast('Izin mikrofon ditolak. Aktifkan di pengaturan browser.'); });
+    }
+    function stopWhisper(){
+      listening = false; clearTimeout(autoTimer);
+      setVoiceUi(false);
+      try{ if(mr && mr.state !== 'inactive') mr.stop(); }catch(e){}
+      if(stream){ stream.getTracks().forEach(function(t){ t.stop(); }); stream = null; }
+    }
+    function sendWhisper(blob){
+      if(blob.size < 2000){ api.toast('Rekaman terlalu pendek, coba lagi'); return; }
+      busy(true, 'Memproses suara…');
+      var t = blob.type || '';
+      var fd = new FormData();
+      fd.append('file', blob, 'suara.' + (t.indexOf('mp4') > -1 ? 'm4a' : t.indexOf('ogg') > -1 ? 'ogg' : 'webm'));
+      fd.append('model', 'whisper-large-v3-turbo');
+      fd.append('language', vs.lang.slice(0, 2));
+      fd.append('temperature', '0');
+      fd.append('response_format', 'json');
+      fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+        method: 'POST', headers: { Authorization: 'Bearer ' + vs.key }, body: fd
+      }).then(function(r){
+        if(!r.ok) throw new Error(r.status);
+        return r.json();
+      }).then(function(j){
+        busy(false);
+        if(j && j.text && j.text.trim()) handleSpeech(j.text); else api.toast('Tidak terdengar, coba lagi');
+      }).catch(function(err){
+        busy(false);
+        var s = String(err && err.message);
+        api.toast(s === '401' ? 'API key salah atau kedaluwarsa' : s === '429' ? 'Kuota Groq habis, coba sebentar lagi' : 'Gagal memproses suara. Cek koneksi internet.');
+      });
+    }
+
+    /* --- pintu masuk yang dipakai tombol mic --- */
+    function startVoice(){ if(vs.engine === 'whisper') startWhisper(); else startBrowser(); }
+    function stopVoice(){ if(vs.engine === 'whisper') stopWhisper(); else stopBrowser(); }
+    if(!SR && !window.MediaRecorder){ L('b-mic').hidden = true; }
     else{ L('b-mic').onclick = function(){ if(listening) stopVoice(); else startVoice(); }; }
+
+    /* --- panel “ganti suara” --- */
+    function opt(k, v, title, sub){
+      return '<button class="vs-o' + (vs[k] === v ? ' sel' : '') + '" data-k="' + k + '" data-v="' + v + '"><b>' + title + '</b>' +
+        (sub ? '<small>' + sub + '</small>' : '') + '</button>';
+    }
+    function openVoiceSettings(){
+      if(listening) stopVoice();
+      if(vsOv) return;
+      vsOv = document.createElement('div'); vsOv.className = 'vs-ov';
+      function draw(){
+        vsOv.innerHTML = '<div class="vs-card"><h3>Ganti suara</h3>' +
+          '<div class="vs-l">Mesin pengenal suara</div>' +
+          opt('engine', 'browser', 'Browser (gratis)', 'Langsung jalan tanpa setup. Akurasi tergantung HP & browser.') +
+          opt('engine', 'whisper', 'Whisper via Groq', 'Biasanya lebih akurat untuk bahasa Indonesia. Butuh internet & API key Groq.') +
+          (vs.engine === 'whisper'
+            ? '<input class="vs-key" id="vs-key" type="password" autocomplete="off" placeholder="API key Groq (gsk_…)" value="' + api.esc(vs.key) + '">' +
+              '<p class="vs-note">Key disimpan di HP ini saja dan dikirim langsung ke Groq. Jangan dipakai di HP orang lain.</p>'
+            : '<div class="vs-l">Cara bicara</div>' +
+              opt('mode', 'sekali', 'Sekali ucap', 'Ketuk 🎤, sebut barang, berhenti otomatis. Paling stabil.') +
+              opt('mode', 'terus', 'Terus-menerus', 'Mic tetap menyala untuk banyak barang. Kadang putus sendiri.')) +
+          '<div class="vs-l">Bahasa</div>' +
+          '<div class="vs-row">' + opt('lang', 'id-ID', 'Indonesia') + opt('lang', 'en-US', 'English') + '</div>' +
+          '<button class="vs-ok" data-ok="1">Selesai</button></div>';
+      }
+      function close(){ if(vsOv){ vsOv.remove(); vsOv = null; setHint(); } }
+      vsOv.addEventListener('click', function(e){
+        var b = e.target.closest('[data-k]');
+        if(b){ vs[b.dataset.k] = b.dataset.v; saveVs(); draw(); return; }
+        if(e.target === vsOv || e.target.closest('[data-ok]')) close();
+      });
+      vsOv.addEventListener('input', function(e){
+        if(e.target.id === 'vs-key'){ vs.key = e.target.value.trim(); saveVs(); }
+      });
+      draw(); root.appendChild(vsOv);
+    }
+    L('b-vs').onclick = openVoiceSettings;
+    setHint();
+
+    /* ---------- riwayat per kategori + tempel daftar ---------- */
+    var CATS = [
+      { n: 'Sabun & Kebersihan', w: 'sabun sampo shampo odol gigi sikat detergen rinso sunlight pewangi pelembut molto wipol karbol pel tisu pembalut popok pampers deodoran lotion cukur kapas cuci spons sapu' },
+      { n: 'Mie & Makanan Instan', w: 'mie mi indomie supermi sedaap sarimi bihun soun spaghetti makaroni oatmeal bubur sereal kornet sarden nugget sosis instan' },
+      { n: 'Kopi, Teh & Minuman', w: 'kopi teh susu sirup coklat cokelat milo energen minuman air galon aqua jus soda sprite fanta cola pocari creamer krimer' },
+      { n: 'Snack & Camilan', w: 'snack keripik biskuit roti wafer permen kerupuk chiki cemilan camilan' },
+      { n: 'Lauk & Protein', w: 'ayam daging sapi ikan udang tahu tempe telur bakso' },
+      { n: 'Sayur & Buah', w: 'sayur bayam kangkung wortel kentang tomat cabai cabe bawang timun jeruk apel pisang jahe kunyit lengkuas buah selada kol sawi brokoli' },
+      { n: 'Bumbu & Saus', w: 'kecap saus sambal bumbu santan kaldu royco masako merica terasi penyedap cuka lada ketumbar kemiri' },
+      { n: 'Sembako', w: 'beras minyak gula tepung terigu garam maizena sagu' }
+    ];
+    CATS.forEach(function(c){ c.k = c.w.split(' '); });
+    var CAT_ORDER = CATS.map(function(c){ return c.n; }).concat(['Lainnya']);
+
+    function guessCat(name){
+      var words = norm(name).split(/[^a-z0-9]+/).filter(Boolean);
+      for(var i = 0; i < CATS.length; i++){
+        var ks = CATS[i].k;
+        for(var j = 0; j < words.length; j++){
+          for(var m = 0; m < ks.length; m++){
+            if(words[j] === ks[m] || (ks[m].length >= 4 && words[j].indexOf(ks[m]) === 0)) return CATS[i].n;
+          }
+        }
+      }
+      return 'Lainnya';
+    }
+    function catOf(h){ return h.cat || guessCat(h.name); }
+    function cap(t){ return t.charAt(0).toUpperCase() + t.slice(1); }
+
+    /* teks tempelan → [{name, qty}] (baris/koma, buang bullet & nomor, format ekspor “Beras 2×” ikut terbaca) */
+    function parsePaste(text){
+      var out = [];
+      String(text || '').split(/\r?\n/).forEach(function(line){
+        line = line.trim();
+        if(!line || /^(?:🛒\s*)?daftar belanja\b/i.test(line) || /^total\b/i.test(line)) return;
+        line = line.replace(/^(?:[-*•▪◦✔☐☑✅□]\s*|\[[ xX]?\]\s*|\d{1,2}[.)]\s+)+/, '').trim();
+        if(!line) return;
+        var ex = line.match(/^(.*\S)\s+(\d{1,3})\s*[×x]\s*(?:\(.*\))?$/i);
+        if(ex){ out.push({ name: cap(ex[1].trim()), qty: parseInt(ex[2], 10) || 1 }); return; }
+        line.replace(/(\d)[.,](\d)/g, '$1§$2').split(/\s*[,;]\s*/).forEach(function(raw){
+          var it = parsePhrase(raw.replace(/§/g, ',').toLowerCase());
+          if(it) out.push(it);
+        });
+      });
+      return out;
+    }
+    /* masukkan banyak barang sekaligus (barang yang sama & belum dicentang → jumlah ditambah) */
+    function addParsed(list){
+      var snap = JSON.stringify(items), n = 0;
+      list.forEach(function(it){
+        var k = norm(it.name);
+        var ex = items.filter(function(x){ return !x.done && norm(x.name) === k; })[0];
+        if(ex){ ex.qty += it.qty; }
+        else{ push(hist[k] ? hist[k].name : it.name, it.qty, (hist[k] && hist[k].price) || 0, true); }
+        n++;
+      });
+      if(!n) return;
+      commit();
+      api.toast('Ditambah ' + n + ' barang', function(){ items = JSON.parse(snap); commit(); });
+    }
+
+    /* --- panel Tempel daftar --- */
+    var psOv = null;
+    function openPaste(){
+      if(psOv) return;
+      if(listening) stopVoice();
+      psOv = document.createElement('div'); psOv.className = 'vs-ov';
+      psOv.innerHTML = '<div class="vs-card"><h3>Tempel daftar</h3>' +
+        '<p class="vs-note">Tempel dari WhatsApp atau catatan. Satu barang per baris, atau dipisah koma.</p>' +
+        '<textarea class="ps-ta" id="ps-t" placeholder="Contoh:&#10;beras 2 kilo&#10;telur&#10;minyak goreng, gula 1 kg"></textarea>' +
+        '<button class="vs-o" data-clip="1" style="margin-top:8px;text-align:center">📋 Ambil dari clipboard</button>' +
+        '<div class="vs-l" id="ps-c">Belum ada barang terbaca</div><ul class="ps-pv" id="ps-pv"></ul>' +
+        '<button class="vs-ok" id="ps-go" disabled>Tambahkan</button>' +
+        '<button class="vs-o" data-x="1" style="margin-top:8px;text-align:center">Batal</button></div>';
+      var T = function(id){ return psOv.querySelector('#' + id); };
+      var cur = [];
+      function preview(){
+        cur = parsePaste(T('ps-t').value);
+        T('ps-c').textContent = cur.length ? cur.length + ' barang akan ditambahkan' : 'Belum ada barang terbaca';
+        T('ps-pv').innerHTML = cur.slice(0, 60).map(function(it){
+          return '<li>' + api.esc(it.name) + (it.qty > 1 ? ' ×' + it.qty : '') + '</li>';
+        }).join('');
+        T('ps-go').disabled = !cur.length;
+      }
+      function close(){ if(psOv){ psOv.remove(); psOv = null; } }
+      psOv.addEventListener('input', function(e){ if(e.target.id === 'ps-t') preview(); });
+      psOv.addEventListener('click', function(e){
+        if(e.target === psOv || e.target.closest('[data-x]')){ close(); return; }
+        if(e.target.closest('[data-clip]')){
+          try{
+            navigator.clipboard.readText().then(function(t){ T('ps-t').value = t; preview(); })
+              .catch(function(){ api.toast('Tidak bisa baca clipboard, tempel manual saja'); });
+          }catch(err){ api.toast('Tidak bisa baca clipboard, tempel manual saja'); }
+          return;
+        }
+        if(e.target.closest('#ps-go') && cur.length){ var l = cur; close(); addParsed(l); }
+      });
+      root.appendChild(psOv);
+      T('ps-t').focus();
+    }
+
+    /* --- panel Riwayat (dikelompokkan per kategori) --- */
+    var hsOv = null;
+    function openHistory(){
+      if(hsOv) return;
+      if(listening) stopVoice();
+      var q = '', open = null, oq = 1, added = {};
+      hsOv = document.createElement('div'); hsOv.className = 'vs-ov';
+      hsOv.innerHTML = '<div class="vs-card"><h3>Riwayat barang</h3>' +
+        '<p class="vs-note">Ketuk barang, atur jumlah, lalu tambah ke daftar. Bisa tambah beberapa sekaligus.</p>' +
+        '<input class="vs-key" id="hs-q" placeholder="Cari barang…" autocomplete="off">' +
+        '<div id="hs-list"></div><button class="vs-ok" data-ok="1">Selesai</button></div>';
+      var H = function(id){ return hsOv.querySelector('#' + id); };
+      function readQty(){ var f = H('hs-qty'); if(f){ var v = parseInt(f.value, 10); oq = v > 0 ? v : 1; } }
+      function drawList(){
+        var inList = {};
+        items.forEach(function(i){ if(!i.done) inList[norm(i.name)] = i.qty; });
+        var nq = norm(q), groups = {};
+        Object.keys(hist).forEach(function(k){
+          if(nq && k.indexOf(nq) < 0) return;
+          var c = catOf(hist[k]);
+          if(CAT_ORDER.indexOf(c) < 0) c = 'Lainnya';
+          (groups[c] = groups[c] || []).push(k);
+        });
+        var html = '';
+        CAT_ORDER.forEach(function(c){
+          var ks = groups[c]; if(!ks) return;
+          ks.sort(function(a, b){ return (hist[b].n - hist[a].n) || (hist[b].last - hist[a].last); });
+          html += '<div class="vs-l">' + api.esc(c) + ' · ' + ks.length + '</div>';
+          ks.forEach(function(k){
+            var h = hist[k];
+            var meta = added[k] ? '✓ masuk ×' + added[k] : inList[k] ? 'di daftar ×' + inList[k] : h.n + '× dibeli';
+            html += '<div class="hr' + (open === k ? ' open' : '') + '"><button class="hr-top" data-t="' + api.esc(k) + '">' +
+              '<span class="hr-n">' + api.esc(h.name) + '</span><span class="hr-m">' + meta + '</span></button>';
+            if(open === k){
+              html += '<div class="hr-ctl"><div class="hr-step"><button data-s="-1" aria-label="Kurang">−</button>' +
+                '<input id="hs-qty" inputmode="numeric" value="' + oq + '" onfocus="this.select()"><button data-s="1" aria-label="Tambah">+</button></div>' +
+                '<button class="hr-add" data-add="1">Tambah ke daftar</button>' +
+                '<div class="hr-sub"><select id="hs-cat" aria-label="Kategori">' + CAT_ORDER.map(function(n){
+                  return '<option' + (n === c ? ' selected' : '') + '>' + api.esc(n) + '</option>';
+                }).join('') + '</select><button data-del="1">Hapus dari riwayat</button></div></div>';
+            }
+            html += '</div>';
+          });
+        });
+        if(!html) html = '<div class="empty"><span class="em">🗂️</span>' + (Object.keys(hist).length ? 'Tidak ada barang yang cocok.' : 'Riwayat masih kosong.<br>Barang yang pernah dicatat akan muncul di sini.') + '</div>';
+        H('hs-list').innerHTML = html;
+      }
+      function close(){ if(hsOv){ hsOv.remove(); hsOv = null; } }
+      hsOv.addEventListener('input', function(e){
+        if(e.target.id === 'hs-q'){ q = e.target.value; open = null; drawList(); }
+      });
+      hsOv.addEventListener('change', function(e){
+        if(e.target.id === 'hs-cat' && open && hist[open]){
+          readQty();
+          hist[open].cat = e.target.value; hst.set(hist); drawList();
+        }
+      });
+      hsOv.addEventListener('click', function(e){
+        if(e.target === hsOv || e.target.closest('[data-ok]')){ close(); return; }
+        var t = e.target.closest('[data-t]');
+        if(t){
+          var k = t.dataset.t;
+          if(open === k){ open = null; }
+          else{ open = k; oq = hist[k] && hist[k].qty > 0 ? hist[k].qty : 1; }
+          drawList(); return;
+        }
+        var st2 = e.target.closest('[data-s]');
+        if(st2){ readQty(); oq = Math.max(1, oq + parseInt(st2.dataset.s, 10)); drawList(); return; }
+        if(e.target.closest('[data-add]') && open && hist[open]){
+          readQty();
+          var h = hist[open], k2 = open, ex = items.filter(function(x){ return !x.done && norm(x.name) === k2; })[0];
+          if(ex){ ex.qty += oq; commit(); }
+          else{ push(h.name, oq, h.price || 0, true); }
+          added[k2] = (added[k2] || 0) + oq;
+          open = null; api.buzz(12); drawList(); return;
+        }
+        if(e.target.closest('[data-del]') && open){
+          delete hist[open]; hst.set(hist); open = null; renderSugg(); drawList();
+        }
+      });
+      root.appendChild(hsOv);
+      drawList();
+    }
+    L('b-hs').onclick = openHistory;
+    L('b-ps').onclick = openPaste;
 
     render();
 
     return {
-      destroy: function(){ if(listening) stopVoice(); },
+      destroy: function(){ if(listening) stopVoice(); [vsOv, hsOv, psOv].forEach(function(o){ if(o) o.remove(); }); vsOv = hsOv = psOv = null; },
       /* aksi di menu ⋯ */
       menu: [
+        { label: 'Riwayat barang', run: openHistory },
+        { label: 'Tempel daftar', run: openPaste },
+        { label: 'Ganti suara', run: openVoiceSettings },
         { label: 'Hapus yang sudah dibeli', run: function(){ var u = undoable('Yang sudah dibeli dihapus'); items = items.filter(function(i){ return !i.done; }); commit(); u(); } },
         { label: 'Kosongkan semua centang', run: function(){ var u = undoable('Centang dikosongkan'); items.forEach(function(i){ i.done = false; }); commit(); u(); } },
         { label: 'Reset semua daftar', danger: true, run: function(){ if(!items.length) return; var u = undoable('Daftar di-reset'); items = []; commit(); api.buzz(20); u(); } },
