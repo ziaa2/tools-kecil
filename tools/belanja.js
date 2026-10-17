@@ -63,7 +63,17 @@ App.registerTool({
     '.iname{flex:1;min-width:0}' +
     '.iqty{width:52px;text-align:center;border-left:1px solid var(--line)!important}' +
     '.add{width:46px;height:46px;border-radius:14px;background:var(--accent);color:var(--accent-ink);font-size:24px;font-weight:600;display:grid;place-items:center}' +
-    '.add:active{transform:scale(.92)}',
+    '.add:active{transform:scale(.92)}' +
+    '.mic{width:46px;height:46px;flex:none;border-radius:14px;display:grid;place-items:center;font-size:20px;background:var(--surface);border:1px solid var(--line)}' +
+    '.mic:active{transform:scale(.92)}' +
+    '.mic.on{background:#ef4444;border-color:#ef4444;color:#fff;animation:mpulse 1.2s ease-in-out infinite}' +
+    '@keyframes mpulse{50%{box-shadow:0 0 0 6px rgba(239,68,68,.25)}}' +
+    '.vbox{display:none;margin-bottom:8px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}' +
+    '.addbar.listening .vbox{display:block}' +
+    '.vrow{display:flex;align-items:center;gap:8px;font-size:15px}' +
+    '.vdot{width:10px;height:10px;border-radius:50%;background:#ef4444;flex:none;animation:vblink 1s ease-in-out infinite}' +
+    '@keyframes vblink{50%{opacity:.3}}' +
+    '.vhint{color:var(--muted);font-size:12px;margin-top:6px;line-height:1.4}',
 
   mount: function(root, api){
     var st = api.store('belanja');
@@ -78,11 +88,14 @@ App.registerTool({
       '<div class="bar"><i id="b-prog"></i></div></div>' +
       '<ul class="list" id="b-list"></ul>' +
       '<div class="addbar" id="b-addbar"><div class="addwrap">' +
+        '<div class="vbox" id="b-voice"><div class="vrow"><span class="vdot"></span><span id="b-vtxt"></span></div>' +
+        '<div class="vhint">Contoh: “beras dua kilo, telur, minyak goreng”. Suara diproses lewat layanan browser (Chrome mengirimnya ke Google).</div></div>' +
         '<div class="sugg" id="b-sugg"></div>' +
         '<p class="hint"><button id="b-tp">+ isi harga</button></p>' +
         '<div class="price-row"><input id="b-price" inputmode="numeric" placeholder="Harga satuan (opsional)"></div>' +
         '<div class="addin"><input class="iname" id="b-name" placeholder="Tulis barang…" autocomplete="off" enterkeyhint="done">' +
         '<input class="iqty" id="b-qty" inputmode="numeric" placeholder="Jml" value="1">' +
+        '<button class="mic" id="b-mic" aria-label="Bicara">🎤</button>' +
         '<button class="add" id="b-add" aria-label="Tambah">+</button></div>' +
       '</div></div>';
 
@@ -164,12 +177,12 @@ App.registerTool({
     }
 
     /* ---------- tambah barang ---------- */
-    function push(name, qty, price){
+    function push(name, qty, price, quiet){
       var it = { id: api.uid(), name: name, qty: qty, price: price || 0, done: false };
       items.unshift(it); justAdded = it.id;
       learn(it);
-      L('b-name').value = ''; L('b-qty').value = '1'; L('b-price').value = '';
-      commit(); api.buzz(12); L('b-name').focus();
+      if(!quiet){ L('b-name').value = ''; L('b-qty').value = '1'; L('b-price').value = ''; }
+      commit(); api.buzz(12); if(!quiet) L('b-name').focus();
     }
     function add(){
       var name = L('b-name').value.trim().replace(/\s+/g, ' ');
@@ -211,9 +224,118 @@ App.registerTool({
       }
     });
 
+    /* ---------- input suara (Web Speech API) ---------- */
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var rec = null, listening = false, processed = 0, lastResultAt = 0, lastText = '', lastAt = 0;
+    var NUMW = { nol: 0, satu: 1, dua: 2, tiga: 3, empat: 4, lima: 5, enam: 6, tujuh: 7, delapan: 8, sembilan: 9, sepuluh: 10, sebelas: 11 };
+    var UNITW = {};
+    ('kg kilo kilogram gram gr g ons liter l ml bungkus bks pak botol kaleng butir biji buah pcs lusin sachet saset karung ikat sisir papan dus kardus renteng slop').split(' ').forEach(function(u){ UNITW[u] = true; });
+
+    /* "dua belas" → "12", "setengah" → "½" */
+    function numTokens(words){
+      var out = [];
+      for(var i = 0; i < words.length; i++){
+        var w = words[i], n = NUMW[w];
+        if(n !== undefined && words[i + 1] === 'belas'){ out.push(String(10 + n)); i++; }
+        else if(n !== undefined && words[i + 1] === 'puluh'){ out.push(String(n * 10)); i++; }
+        else if(n !== undefined){ out.push(String(n)); }
+        else if(w === 'setengah' || w === 'separuh'){ out.push('½'); }
+        else out.push(w);
+      }
+      return out;
+    }
+    /* satu frasa → {name, qty}. Kalau ada satuan (kilo, botol…), takarannya tetap di nama: "Beras 2 kilo" */
+    function parsePhrase(p){
+      var w = p.replace(/^\s*(?:tolong\s+)?(?:tambah(?:kan)?|beli(?:kan)?|catat(?:kan)?|masukkan|mau|perlu|butuh)\s+/, '').trim().split(/\s+/).filter(Boolean);
+      var t = numTokens(w);
+      if(!t.length) return null;
+      var hasUnit = t.some(function(x){ return UNITW[x]; });
+      var qty = 1;
+      if(!hasUnit && t.length > 1){
+        if(/^\d{1,2}$/.test(t[0])){ qty = parseInt(t[0], 10); t = t.slice(1); }
+        else if(/^\d{1,2}$/.test(t[t.length - 1])){ qty = parseInt(t[t.length - 1], 10); t = t.slice(0, -1); }
+      }
+      var name = t.join(' ').trim();
+      if(!name || /^[\d½]+$/.test(name)) return null;
+      return { name: name.charAt(0).toUpperCase() + name.slice(1), qty: qty > 0 ? qty : 1 };
+    }
+    /* hasil ucapan → beberapa barang (dipisah jeda, koma, "dan", "sama", "lalu", dll.) */
+    function handleSpeech(text){
+      text = String(text || '').trim();
+      if(!text) return;
+      var key = text.toLowerCase();
+      if(key === lastText && Date.now() - lastAt < 2000) return;       // cegah hasil dobel
+      lastText = key; lastAt = Date.now();
+      var parts = key.replace(/(\d)[.,](\d)/g, '$1§$2')
+        .split(/\s*(?:[,;.]|\bkoma\b|\btitik\b|\blalu\b|\bterus\b|\bdan\b|\bsama\b|\bplus\b)\s*/);
+      var snap = JSON.stringify(items), names = [];
+      parts.forEach(function(raw){
+        var it = parsePhrase(raw.replace(/§/g, ','));
+        if(!it) return;
+        var k = norm(it.name);
+        var ex = items.filter(function(x){ return !x.done && norm(x.name) === k; })[0];
+        if(ex){ ex.qty += it.qty; }
+        else{ push(it.name, it.qty, (hist[k] && hist[k].price) || 0, true); }
+        names.push(it.name);
+      });
+      if(!names.length) return;
+      commit();
+      api.toast('Ditambah: ' + names.join(', '), function(){ items = JSON.parse(snap); commit(); });
+    }
+
+    function setVoiceUi(on){
+      L('b-addbar').classList.toggle('listening', on);
+      L('b-mic').classList.toggle('on', on);
+      L('b-mic').textContent = on ? '⏹' : '🎤';
+      L('b-mic').setAttribute('aria-label', on ? 'Berhenti' : 'Bicara');
+    }
+    function startVoice(){
+      try{
+        rec = new SR();
+        rec.lang = 'id-ID'; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
+      }catch(e){ api.toast('Suara tidak bisa dipakai di browser ini'); return; }
+      processed = 0; listening = true; lastResultAt = Date.now();
+      L('b-vtxt').textContent = 'Mendengarkan… sebutkan barang';
+      setVoiceUi(true); api.buzz(15);
+      rec.onresult = function(e){
+        var interim = '';
+        for(var i = 0; i < e.results.length; i++){
+          var r = e.results[i];
+          if(r.isFinal){ if(i >= processed){ processed = i + 1; handleSpeech(r[0].transcript); } }
+          else interim += r[0].transcript;
+        }
+        lastResultAt = Date.now();
+        L('b-vtxt').textContent = interim.trim() ? '“' + interim.trim() + '”' : 'Mendengarkan… lanjut sebutkan barang';
+      };
+      rec.onerror = function(e){
+        var msg = {
+          'not-allowed': 'Izin mikrofon ditolak. Aktifkan di pengaturan browser.',
+          'service-not-allowed': 'Izin mikrofon ditolak. Aktifkan di pengaturan browser.',
+          'audio-capture': 'Mikrofon tidak ditemukan.',
+          'network': 'Pengenalan suara butuh koneksi internet.'
+        }[e && e.error];
+        if(msg){ api.toast(msg); stopVoice(); }
+      };
+      rec.onend = function(){
+        if(!listening){ setVoiceUi(false); return; }
+        if(Date.now() - lastResultAt > 12000){ stopVoice(); return; }      // lama tidak ada suara → berhenti sendiri
+        processed = 0;
+        try{ rec.start(); }catch(err){ stopVoice(); }
+      };
+      try{ rec.start(); }catch(err){ stopVoice(); api.toast('Mikrofon sedang dipakai, coba lagi'); }
+    }
+    function stopVoice(){
+      listening = false;
+      try{ if(rec) rec.stop(); }catch(e){}
+      setVoiceUi(false);
+    }
+    if(!SR){ L('b-mic').hidden = true; }
+    else{ L('b-mic').onclick = function(){ if(listening) stopVoice(); else startVoice(); }; }
+
     render();
 
     return {
+      destroy: function(){ if(listening) stopVoice(); },
       /* aksi di menu ⋯ */
       menu: [
         { label: 'Hapus yang sudah dibeli', run: function(){ var u = undoable('Yang sudah dibeli dihapus'); items = items.filter(function(i){ return !i.done; }); commit(); u(); } },
