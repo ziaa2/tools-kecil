@@ -91,19 +91,33 @@ App.registerTool({
     '.qrow::-webkit-scrollbar{display:none}' +
     '.qb{flex:none;background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:8px 13px;font-size:13px;white-space:nowrap}' +
     '.qb:active{background:var(--surface)}' +
-    '.hr{border:1px solid var(--line);background:var(--surface2);border-radius:12px;margin-bottom:6px;overflow:hidden}' +
-    '.hr.open{border-color:var(--accent)}' +
-    '.hr-top{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:11px 12px;text-align:left}' +
-    '.hr-n{font-size:15px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
-    '.hr-m{font-size:12px;color:var(--muted);flex:none}' +
-    '.hr-ctl{padding:0 12px 12px}' +
-    '.hr-step{display:flex;align-items:center;gap:8px;margin-bottom:8px}' +
-    '.hr-step button{width:42px;height:42px;border-radius:12px;background:var(--surface);border:1px solid var(--line);font-size:20px}' +
-    '.hr-step input{width:70px;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 4px;outline:0}' +
-    '.hr-add{width:100%;padding:11px;border-radius:12px;background:var(--accent);color:var(--accent-ink);font-weight:600}' +
-    '.hr-sub{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px}' +
-    '.hr-sub select{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px;color:inherit}' +
-    '.hr-sub button{color:var(--danger);font-size:12.5px;padding:6px 4px;flex:none}' +
+    '.hs-card{display:flex;flex-direction:column;height:min(86vh,720px);overflow:hidden;padding-bottom:0}' +
+    '.hs-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}' +
+    '.hs-head h3{margin:0}' +
+    '.hs-x{width:36px;height:36px;border-radius:10px;color:var(--muted);font-size:18px}' +
+    '.hs-tabs{flex:none;display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}' +
+    '.hs-tabs::-webkit-scrollbar{display:none}' +
+    '.hs-tab{flex:none;background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:7px 12px;font-size:13px;white-space:nowrap}' +
+    '.hs-tab small{opacity:.65;margin-left:5px;font-size:11px}' +
+    '.hs-tab.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}' +
+    '.hs-body{flex:1;min-height:0;overflow-y:auto;padding-bottom:10px}' +
+    '.hs-h{margin:12px 0 6px;font-size:12.5px;color:var(--muted)}.hs-h:first-child{margin-top:2px}' +
+    '.hs-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}' +
+    '.hs-it{text-align:left;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px 11px;min-height:60px;display:flex;flex-direction:column;justify-content:space-between;gap:4px}' +
+    '.hs-it b{font-weight:500;font-size:14.5px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}' +
+    '.hs-it small{color:var(--muted);font-size:11.5px}' +
+    '.hs-it.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}' +
+    '.hs-it.ok small{color:var(--accent)}' +
+    '.hs-foot{flex:none;border-top:1px solid var(--line);padding:10px 0 calc(12px + env(safe-area-inset-bottom,0px))}' +
+    '.hs-sel{display:flex;align-items:center;gap:8px;margin-bottom:8px}' +
+    '.hs-sel .nm{flex:1;min-width:0;font-size:15px;font-weight:550;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+    '.hs-sel select{max-width:42%;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:7px;color:inherit;font-size:12.5px}' +
+    '.hs-del{width:36px;height:36px;border-radius:10px;font-size:16px;flex:none}' +
+    '.hs-act{display:flex;gap:8px}' +
+    '.hs-step{display:flex;align-items:center;gap:6px;flex:none}' +
+    '.hs-step button{width:40px;height:44px;border-radius:12px;background:var(--surface2);border:1px solid var(--line);font-size:20px}' +
+    '.hs-step input{width:54px;height:44px;text-align:center;background:var(--surface2);border:1px solid var(--line);border-radius:12px;outline:0;padding:0}' +
+    '.hs-add{flex:1;min-width:0;height:44px;border-radius:12px;background:var(--accent);color:var(--accent-ink);font-weight:600}' +
     '.ps-ta{width:100%;min-height:120px;resize:vertical;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;outline:0;font:inherit;line-height:1.5;color:inherit}' +
     '.ps-pv{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}' +
     '.ps-pv li{background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:5px 11px;font-size:13px}',
@@ -581,96 +595,131 @@ App.registerTool({
       T('ps-t').focus();
     }
 
-    /* --- panel Riwayat (dikelompokkan per kategori) --- */
+    /* --- panel Riwayat: tab kategori + kartu 2 kolom + bar tambah di bawah --- */
     var hsOv = null;
     function openHistory(){
       if(hsOv) return;
       if(listening) stopVoice();
-      var q = '', open = null, oq = 1, added = {};
+      var q = '', tab = 'all', sel = null, oq = 1, added = {};
       hsOv = document.createElement('div'); hsOv.className = 'vs-ov';
-      hsOv.innerHTML = '<div class="vs-card"><h3>Riwayat barang</h3>' +
-        '<p class="vs-note">Ketuk barang, atur jumlah, lalu tambah ke daftar. Bisa tambah beberapa sekaligus.</p>' +
+      hsOv.innerHTML = '<div class="vs-card hs-card">' +
+        '<div class="hs-head"><h3>Riwayat barang</h3><button class="hs-x" data-ok="1" aria-label="Tutup">✕</button></div>' +
         '<input class="vs-key" id="hs-q" placeholder="Cari barang…" autocomplete="off">' +
-        '<div id="hs-list"></div><button class="vs-ok" data-ok="1">Selesai</button></div>';
+        '<div class="hs-tabs" id="hs-tabs"></div><div class="hs-body" id="hs-body"></div><div class="hs-foot" id="hs-foot"></div></div>';
       var H = function(id){ return hsOv.querySelector('#' + id); };
       function readQty(){ var f = H('hs-qty'); if(f){ var v = parseInt(f.value, 10); oq = v > 0 ? v : 1; } }
-      function drawList(){
+      function groupsOf(keys){
+        var g = {};
+        keys.forEach(function(k){
+          var c = catOf(hist[k]); if(CAT_ORDER.indexOf(c) < 0) c = 'Lainnya';
+          (g[c] = g[c] || []).push(k);
+        });
+        CAT_ORDER.forEach(function(c){
+          if(g[c]) g[c].sort(function(a, b){ return (hist[b].n - hist[a].n) || (hist[b].last - hist[a].last); });
+        });
+        return g;
+      }
+      function card(k, inList){
+        var h = hist[k];
+        var meta = added[k] ? '✓ masuk ×' + added[k] : inList[k] ? 'di daftar ×' + inList[k] : h.n + '×' + (h.price ? ' · ' + api.rp(h.price) : '');
+        return '<button class="hs-it' + (sel === k ? ' sel' : '') + (added[k] ? ' ok' : '') + '" data-t="' + api.esc(k) + '">' +
+          '<b>' + api.esc(h.name) + '</b><small>' + meta + '</small></button>';
+      }
+      function drawBody(){
+        var nq = norm(q);
+        var keys = Object.keys(hist).filter(function(k){ return !nq || k.indexOf(nq) > -1; });
+        var g = groupsOf(keys);
+        if(tab !== 'all' && !g[tab]) tab = 'all';
         var inList = {};
         items.forEach(function(i){ if(!i.done) inList[norm(i.name)] = i.qty; });
-        var nq = norm(q), groups = {};
-        Object.keys(hist).forEach(function(k){
-          if(nq && k.indexOf(nq) < 0) return;
-          var c = catOf(hist[k]);
-          if(CAT_ORDER.indexOf(c) < 0) c = 'Lainnya';
-          (groups[c] = groups[c] || []).push(k);
+        var tabsEl = H('hs-tabs'), tl = tabsEl.scrollLeft;
+        var tabs = '<button class="hs-tab' + (tab === 'all' ? ' on' : '') + '" data-tab="all">Semua<small>' + keys.length + '</small></button>';
+        CAT_ORDER.forEach(function(c){
+          if(g[c]) tabs += '<button class="hs-tab' + (tab === c ? ' on' : '') + '" data-tab="' + api.esc(c) + '">' + api.esc(c) + '<small>' + g[c].length + '</small></button>';
         });
+        tabsEl.innerHTML = tabs; tabsEl.scrollLeft = tl;
         var html = '';
         CAT_ORDER.forEach(function(c){
-          var ks = groups[c]; if(!ks) return;
-          ks.sort(function(a, b){ return (hist[b].n - hist[a].n) || (hist[b].last - hist[a].last); });
-          html += '<div class="vs-l">' + api.esc(c) + ' · ' + ks.length + '</div>';
-          ks.forEach(function(k){
-            var h = hist[k];
-            var meta = added[k] ? '✓ masuk ×' + added[k] : inList[k] ? 'di daftar ×' + inList[k] : h.n + '× dibeli';
-            html += '<div class="hr' + (open === k ? ' open' : '') + '"><button class="hr-top" data-t="' + api.esc(k) + '">' +
-              '<span class="hr-n">' + api.esc(h.name) + '</span><span class="hr-m">' + meta + '</span></button>';
-            if(open === k){
-              html += '<div class="hr-ctl"><div class="hr-step"><button data-s="-1" aria-label="Kurang">−</button>' +
-                '<input id="hs-qty" inputmode="numeric" value="' + oq + '" onfocus="this.select()"><button data-s="1" aria-label="Tambah">+</button></div>' +
-                '<button class="hr-add" data-add="1">Tambah ke daftar</button>' +
-                '<div class="hr-sub"><select id="hs-cat" aria-label="Kategori">' + CAT_ORDER.map(function(n){
-                  return '<option' + (n === c ? ' selected' : '') + '>' + api.esc(n) + '</option>';
-                }).join('') + '</select><button data-del="1">Hapus dari riwayat</button></div></div>';
-            }
-            html += '</div>';
-          });
+          if(!g[c] || (tab !== 'all' && tab !== c)) return;
+          if(tab === 'all') html += '<div class="hs-h">' + api.esc(c) + '</div>';
+          html += '<div class="hs-grid">' + g[c].map(function(k){ return card(k, inList); }).join('') + '</div>';
         });
         if(!html) html = '<div class="empty"><span class="em">🗂️</span>' + (Object.keys(hist).length ? 'Tidak ada barang yang cocok.' : 'Riwayat masih kosong.<br>Barang yang pernah dicatat akan muncul di sini.') + '</div>';
-        H('hs-list').innerHTML = html;
+        var body = H('hs-body'), top = body.scrollTop;
+        body.innerHTML = html; body.scrollTop = top;
+      }
+      function drawFoot(){
+        var h = sel && hist[sel];
+        if(!h){
+          sel = null;
+          H('hs-foot').innerHTML = '<p class="vs-note" style="margin:0 0 8px;text-align:center">Ketuk barang untuk menambah ke daftar</p>' +
+            '<button class="vs-ok" data-ok="1" style="margin:0">Selesai</button>';
+          return;
+        }
+        var c = catOf(h); if(CAT_ORDER.indexOf(c) < 0) c = 'Lainnya';
+        H('hs-foot').innerHTML = '<div class="hs-sel"><div class="nm">' + api.esc(h.name) + '</div>' +
+          '<select id="hs-cat" aria-label="Kategori">' + CAT_ORDER.map(function(n){
+            return '<option' + (n === c ? ' selected' : '') + '>' + api.esc(n) + '</option>';
+          }).join('') + '</select><button class="hs-del" data-del="1" aria-label="Hapus dari riwayat">🗑</button></div>' +
+          '<div class="hs-act"><div class="hs-step"><button data-s="-1" aria-label="Kurang">−</button>' +
+          '<input id="hs-qty" inputmode="numeric" value="' + oq + '" onfocus="this.select()"><button data-s="1" aria-label="Tambah">+</button></div>' +
+          '<button class="hs-add" data-add="1">Tambah ke daftar</button></div>';
       }
       function close(){ if(hsOv){ hsOv.remove(); hsOv = null; } }
       hsOv.addEventListener('input', function(e){
-        if(e.target.id === 'hs-q'){ q = e.target.value; open = null; drawList(); }
+        if(e.target.id === 'hs-q'){ q = e.target.value; sel = null; drawBody(); drawFoot(); }
       });
       hsOv.addEventListener('change', function(e){
-        if(e.target.id === 'hs-cat' && open && hist[open]){
+        if(e.target.id === 'hs-cat' && sel && hist[sel]){
           readQty();
-          hist[open].cat = e.target.value; hst.set(hist); drawList();
+          hist[sel].cat = e.target.value; hst.set(hist);
+          if(tab !== 'all') tab = e.target.value;
+          drawBody(); drawFoot();
         }
       });
       hsOv.addEventListener('click', function(e){
         if(e.target === hsOv || e.target.closest('[data-ok]')){ close(); return; }
+        var tb = e.target.closest('[data-tab]');
+        if(tb){ tab = tb.dataset.tab; drawBody(); return; }
         var t = e.target.closest('[data-t]');
         if(t){
           var k = t.dataset.t;
-          if(open === k){ open = null; }
-          else{ open = k; oq = hist[k] && hist[k].qty > 0 ? hist[k].qty : 1; }
-          drawList(); return;
+          if(sel === k) sel = null;
+          else{ sel = k; oq = hist[k] && hist[k].qty > 0 ? hist[k].qty : 1; }
+          drawBody(); drawFoot(); return;
         }
-        var st2 = e.target.closest('[data-s]');
-        if(st2){ readQty(); oq = Math.max(1, oq + parseInt(st2.dataset.s, 10)); drawList(); return; }
-        if(e.target.closest('[data-add]') && open && hist[open]){
+        var sb = e.target.closest('[data-s]');
+        if(sb){ readQty(); oq = Math.max(1, oq + parseInt(sb.dataset.s, 10)); drawFoot(); return; }
+        if(e.target.closest('[data-add]') && sel && hist[sel]){
           readQty();
-          var h = hist[open], k2 = open, ex = items.filter(function(x){ return !x.done && norm(x.name) === k2; })[0];
+          var h = hist[sel], k2 = sel, ex = items.filter(function(x){ return !x.done && norm(x.name) === k2; })[0];
           if(ex){ ex.qty += oq; commit(); }
           else{ push(h.name, oq, h.price || 0, true); }
           added[k2] = (added[k2] || 0) + oq;
-          open = null; api.buzz(12); drawList(); return;
+          sel = null; api.buzz(12); drawBody(); drawFoot(); return;
         }
-        if(e.target.closest('[data-del]') && open){
-          delete hist[open]; hst.set(hist); open = null; renderSugg(); drawList();
+        if(e.target.closest('[data-del]') && sel && hist[sel]){
+          if(!window.confirm('Hapus “' + hist[sel].name + '” dari riwayat?')) return;
+          delete hist[sel]; hst.set(hist); sel = null; renderSugg(); drawBody(); drawFoot();
         }
       });
       root.appendChild(hsOv);
-      drawList();
+      drawBody(); drawFoot();
     }
     L('b-hs').onclick = openHistory;
     L('b-ps').onclick = openPaste;
 
+    /* ruang kosong di bawah daftar = tinggi bar input (otomatis ikut berubah) */
+    var addbar = L('b-addbar'), ro = null;
+    function fitPad(){ L('b-list').style.paddingBottom = (addbar.offsetHeight + 24) + 'px'; }
+    if(window.ResizeObserver){ ro = new ResizeObserver(fitPad); ro.observe(addbar); }
+    window.addEventListener('resize', fitPad);
+    fitPad();
+
     render();
 
     return {
-      destroy: function(){ if(listening) stopVoice(); [vsOv, hsOv, psOv].forEach(function(o){ if(o) o.remove(); }); vsOv = hsOv = psOv = null; },
+      destroy: function(){ if(ro) ro.disconnect(); window.removeEventListener('resize', fitPad); if(listening) stopVoice(); [vsOv, hsOv, psOv].forEach(function(o){ if(o) o.remove(); }); vsOv = hsOv = psOv = null; },
       /* aksi di menu ⋯ */
       menu: [
         { label: 'Riwayat barang', run: openHistory },
