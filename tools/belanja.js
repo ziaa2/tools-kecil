@@ -119,6 +119,11 @@ App.registerTool({
     '.hs-step input{width:54px;height:44px;text-align:center;background:var(--surface2);border:1px solid var(--line);border-radius:12px;outline:0;padding:0}' +
     '.hs-add{flex:1;min-width:0;height:44px;border-radius:12px;background:var(--accent);color:var(--accent-ink);font-weight:600}' +
     '.hs-hb{display:flex;gap:2px}' +
+    '.item.tt{border-left:3px solid #f59e0b}' +
+    '.grp.tt{color:#f59e0b;margin-top:18px}.grp.tt:first-child{margin-top:0}' +
+    '.gx{width:30px;height:30px;border-radius:8px;color:var(--muted);font-size:13px;flex:none}' +
+    '.gx:active{background:var(--surface2);color:var(--danger)}' +
+    '.tt-chips{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px}' +
     '.hs-sel .nm small{display:block;font-weight:400;color:var(--muted);font-size:11.5px;overflow:hidden;text-overflow:ellipsis}' +
     'select.vs-key{color:inherit;font:inherit}' +
     '.grp{display:flex;align-items:center;gap:8px;margin:8px 2px 0;font-size:12.5px;color:var(--muted);font-weight:550;user-select:none;cursor:pointer}' +
@@ -160,7 +165,7 @@ App.registerTool({
         '<div class="vbox" id="b-voice"><div class="vrow"><span class="vdot"></span><span id="b-vtxt"></span></div>' +
         '<div class="vhint" id="b-vhint"></div></div>' +
         '<div class="sugg" id="b-sugg"></div>' +
-        '<div class="qrow"><button class="qb" id="b-hs">📋 Riwayat</button><button class="qb" id="b-ps">📥 Tempel daftar</button><button class="qb" id="b-ct">🏷 Kategori</button>' +
+        '<div class="qrow"><button class="qb" id="b-hs">📋 Riwayat</button><button class="qb" id="b-ps">📦 Titip belanja</button><button class="qb" id="b-ct">🏷 Kategori</button>' +
         '<button class="qb" id="b-tp">+ isi harga</button><button class="qb" id="b-vs">🎙 ganti suara</button></div>' +
         '<div class="price-row"><input id="b-price" inputmode="numeric" placeholder="Harga satuan (opsional)"></div>' +
         '<div class="addin"><input class="iname" id="b-name" placeholder="Tulis barang…" autocomplete="off" enterkeyhint="done">' +
@@ -173,7 +178,8 @@ App.registerTool({
     var tanggal = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     L('b-date').textContent = tanggal;
 
-    function total(){ return items.reduce(function(s, i){ return s + (i.price || 0) * i.qty; }, 0); }
+    function sumOf(arr){ return arr.reduce(function(s, i){ return s + (i.price || 0) * i.qty; }, 0); }
+    function total(){ return sumOf(items.filter(function(i){ return !i.titip; })); }      // total belanja sendiri (titipan dihitung terpisah)
 
     /* ---------- riwayat & saran ---------- */
     function norm(s){ return String(s).toLowerCase().replace(/\s+/g, ' ').trim(); }
@@ -194,7 +200,7 @@ App.registerTool({
     function suggestions(q){
       q = norm(q);
       var inList = {};
-      items.forEach(function(i){ if(!i.done) inList[norm(i.name)] = 1; });
+      items.forEach(function(i){ if(!i.done && !i.titip) inList[norm(i.name)] = 1; });
       var arr = Object.keys(hist).filter(function(k){ return !inList[k]; }).map(function(k){ return { k: k, h: hist[k], s: 0 }; });
       if(q){
         arr = arr.filter(function(o){
@@ -221,23 +227,25 @@ App.registerTool({
 
     /* ---------- tampilan daftar ---------- */
     function render(){
-      var done = items.filter(function(i){ return i.done; }).length;
+      var main = items.filter(function(i){ return !i.titip; }), tt = items.filter(function(i){ return i.titip; });
+      var isDone = function(i){ return i.done; };
+      var done = main.filter(isDone).length, ttDone = tt.filter(isDone).length;
       L('b-total').textContent = api.rp(total());
-      L('b-count').textContent = done + ' / ' + items.length + ' dibeli';
-      L('b-prog').style.width = (items.length ? done / items.length * 100 : 0) + '%';
+      L('b-count').textContent = done + ' / ' + main.length + ' dibeli' + (tt.length ? ' · titipan ' + ttDone + '/' + tt.length : '');
+      L('b-prog').style.width = (main.length ? done / main.length * 100 : 0) + '%';
       if(!items.length){
         L('b-list').innerHTML = '<li class="empty"><span class="em">🧺</span>Belum ada catatan.<br>Ketik barang di bawah, lalu tekan +.</li>';
       }else{
-        var sorted = items.slice().sort(function(a, b){ return (a.done ? 1 : 0) - (b.done ? 1 : 0); });
+        var byDone = function(a, b){ return (a.done ? 1 : 0) - (b.done ? 1 : 0); };
         var row = function(i){
           var meta = i.qty + '×' + (i.price ? ' · ' + api.rp(i.price) + ' = ' + api.rp(i.price * i.qty) : '');
-          return '<li class="item' + (i.done ? ' done' : '') + (i.id === justAdded ? ' new' : '') + '" data-id="' + i.id + '">' +
+          return '<li class="item' + (i.titip ? ' tt' : '') + (i.done ? ' done' : '') + (i.id === justAdded ? ' new' : '') + '" data-id="' + i.id + '">' +
             '<button class="chk" data-act="tog" aria-label="Tandai"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>' +
             '<div class="info" data-act="tog"><div class="name">' + api.esc(i.name) + '</div><div class="meta">' + meta + '</div></div>' +
             '<button class="edt" data-act="edit" aria-label="Ubah">✎</button>' +
             '<button class="del" data-act="del" aria-label="Hapus">✕</button></li>';
         };
-        var html = '';
+        var html = '', sorted = main.slice().sort(byDone);
         if(pref.group){
           var g = {};
           sorted.forEach(function(i){
@@ -246,7 +254,7 @@ App.registerTool({
           });
           CAT_ORDER.forEach(function(c){
             var arr = g[c]; if(!arr) return;
-            var dn = arr.filter(function(i){ return i.done; }).length, shut = !!collapsed[c];
+            var dn = arr.filter(isDone).length, shut = !!collapsed[c];
             html += '<li class="grp' + (shut ? ' shut' : '') + (dn === arr.length ? ' alldone' : '') + '" data-g="' + api.esc(c) + '">' +
               '<span class="gc">▾</span><span class="gn">' + api.esc(c) + '</span><small>' + dn + '/' + arr.length + '</small></li>' +
               (shut ? '' : arr.map(row).join(''));
@@ -254,6 +262,17 @@ App.registerTool({
         }else{
           html = sorted.map(row).join('');
         }
+        var who = [];
+        tt.forEach(function(i){ if(who.indexOf(i.titip) < 0) who.push(i.titip); });
+        who.forEach(function(w){
+          var arr = tt.filter(function(i){ return i.titip === w; }).sort(byDone);
+          var dn = arr.filter(isDone).length, shut = !!collapsed['tt:' + w], sub = sumOf(arr);
+          html += '<li class="grp tt' + (shut ? ' shut' : '') + (dn === arr.length ? ' alldone' : '') + '" data-g="' + api.esc('tt:' + w) + '">' +
+            '<span class="gc">▾</span><span class="gn">📦 ' + api.esc(w === 'Titipan' ? 'Titipan' : 'Titipan ' + w) + '</span>' +
+            '<small>' + dn + '/' + arr.length + (sub ? ' · ' + api.rp(sub) : '') + '</small>' +
+            '<button class="gx" data-gdel="' + api.esc(w) + '" aria-label="Hapus ' + api.esc(ttName(w)) + '">✕</button></li>' +
+            (shut ? '' : arr.map(row).join(''));
+        });
         L('b-list').innerHTML = html;
       }
       justAdded = null;
@@ -301,6 +320,13 @@ App.registerTool({
     });
 
     L('b-list').addEventListener('click', function(e){
+      var gx = e.target.closest('[data-gdel]');
+      if(gx){
+        var gw = gx.dataset.gdel;
+        if(!window.confirm('Hapus semua ' + ttName(gw) + '?')) return;
+        var undoT = undoable('Titipan dihapus');
+        items = items.filter(function(i){ return i.titip !== gw; }); commit(); undoT(); return;
+      }
       var gh = e.target.closest('.grp');
       if(gh){ var gk = gh.dataset.g; collapsed[gk] = !collapsed[gk]; render(); return; }
       var t = e.target.closest('[data-act]'); if(!t) return;
@@ -593,7 +619,7 @@ App.registerTool({
       var out = [];
       String(text || '').split(/\r?\n/).forEach(function(line){
         line = line.trim();
-        if(!line || /^▸/.test(line) || /^(?:🛒\s*)?daftar belanja\b/i.test(line) || /^total\b/i.test(line)) return;
+        if(!line || /^(?:▸|📦)/.test(line) || /^(?:🛒\s*)?daftar belanja\b/i.test(line) || /^total\b/i.test(line)) return;
         line = line.replace(/^(?:[-*•▪◦✔☐☑✅□]\s*|\[[ xX]?\]\s*|\d{1,2}[.)]\s+)+/, '').trim();
         if(!line) return;
         var ex = line.match(/^(.*\S)\s+(\d{1,3})\s*[×x]\s*(?:\(.*\))?$/i);
@@ -605,48 +631,71 @@ App.registerTool({
       });
       return out;
     }
-    /* masukkan banyak barang sekaligus (barang yang sama & belum dicentang → jumlah ditambah) */
-    function addParsed(list){
+    /* ---------- titip belanja: barang orang lain, dipisah dari belanja sendiri ---------- */
+    function ttName(w){ return w === 'Titipan' ? 'titipan' : 'titipan ' + w; }
+    function canonWho(w, exceptId){
+      w = cleanName(w).slice(0, 24); if(!w) return '';
+      for(var i = 0; i < items.length; i++){
+        if(items[i].titip && items[i].id !== exceptId && norm(items[i].titip) === norm(w)) return items[i].titip;
+      }
+      return w;
+    }
+    /* titipan tidak masuk riwayat/saran & tidak digabung dengan belanja sendiri (hanya dengan titipan orang yang sama) */
+    function addTitip(list, who){
       var snap = JSON.stringify(items), n = 0;
       list.forEach(function(it){
         var k = norm(it.name);
-        var ex = items.filter(function(x){ return !x.done && norm(x.name) === k; })[0];
+        var ex = items.filter(function(x){ return !x.done && x.titip === who && norm(x.name) === k; })[0];
         if(ex){ ex.qty += it.qty; }
-        else{ push(hist[k] ? hist[k].name : it.name, it.qty, (hist[k] && hist[k].price) || 0, true); }
+        else{
+          var h = hist[k];
+          items.unshift({ id: api.uid(), name: h ? h.name : it.name, qty: it.qty, price: (h && h.price) || 0, done: false, titip: who });
+        }
         n++;
       });
       if(!n) return;
-      commit();
-      api.toast('Ditambah ' + n + ' barang', function(){ items = JSON.parse(snap); commit(); });
+      collapsed['tt:' + who] = false;
+      commit(); api.buzz(12);
+      api.toast(n + ' barang masuk ke ' + ttName(who), function(){ items = JSON.parse(snap); commit(); });
     }
 
-    /* --- panel Tempel daftar --- */
-    var psOv = null;
-    function openPaste(){
+    var psOv = null, lastTitip = '';
+    function openTitip(){
       if(psOv) return;
       if(listening) stopVoice();
+      var names = [];
+      items.forEach(function(i){ if(i.titip && names.indexOf(i.titip) < 0) names.push(i.titip); });
       psOv = document.createElement('div'); psOv.className = 'vs-ov';
-      psOv.innerHTML = '<div class="vs-card"><h3>Tempel daftar</h3>' +
-        '<p class="vs-note">Tempel dari WhatsApp atau catatan. Satu barang per baris, atau dipisah koma.</p>' +
-        '<textarea class="ps-ta" id="ps-t" placeholder="Contoh:&#10;beras 2 kilo&#10;telur&#10;minyak goreng, gula 1 kg"></textarea>' +
+      psOv.innerHTML = '<div class="vs-card"><h3>Titip belanja</h3>' +
+        '<p class="vs-note">Barang titipan orang lain ditaruh di bagian sendiri, tidak tercampur dengan belanjaanmu dan tidak masuk riwayat.</p>' +
+        '<div class="vs-l">Titipan dari</div>' +
+        '<input class="vs-key" id="ps-w" maxlength="24" autocomplete="off" placeholder="Nama, contoh: Ibu (boleh kosong)" value="' + api.esc(lastTitip) + '">' +
+        (names.length ? '<div class="tt-chips">' + names.map(function(n){
+          return '<button class="chip" data-who="' + api.esc(n) + '">' + api.esc(n) + '</button>';
+        }).join('') + '</div>' : '') +
+        '<div class="vs-l">Daftar titipan</div>' +
+        '<textarea class="ps-ta" id="ps-t" placeholder="Tempel dari WhatsApp, atau ketik satu barang per baris:&#10;beras 2 kilo&#10;telur&#10;minyak goreng, gula 1 kg"></textarea>' +
         '<button class="vs-o" data-clip="1" style="margin-top:8px;text-align:center">📋 Ambil dari clipboard</button>' +
         '<div class="vs-l" id="ps-c">Belum ada barang terbaca</div><ul class="ps-pv" id="ps-pv"></ul>' +
-        '<button class="vs-ok" id="ps-go" disabled>Tambahkan</button>' +
+        '<button class="vs-ok" id="ps-go" disabled>Tambahkan titipan</button>' +
         '<button class="vs-o" data-x="1" style="margin-top:8px;text-align:center">Batal</button></div>';
       var T = function(id){ return psOv.querySelector('#' + id); };
       var cur = [];
+      function whoNow(){ return canonWho(T('ps-w').value) || 'Titipan'; }
       function preview(){
         cur = parsePaste(T('ps-t').value);
-        T('ps-c').textContent = cur.length ? cur.length + ' barang akan ditambahkan' : 'Belum ada barang terbaca';
+        T('ps-c').textContent = cur.length ? cur.length + ' barang akan masuk ke ' + ttName(whoNow()) : 'Belum ada barang terbaca';
         T('ps-pv').innerHTML = cur.slice(0, 60).map(function(it){
           return '<li>' + api.esc(it.name) + (it.qty > 1 ? ' ×' + it.qty : '') + '</li>';
         }).join('');
         T('ps-go').disabled = !cur.length;
       }
       function close(){ if(psOv){ psOv.remove(); psOv = null; } }
-      psOv.addEventListener('input', function(e){ if(e.target.id === 'ps-t') preview(); });
+      psOv.addEventListener('input', function(e){ if(e.target.id === 'ps-t' || e.target.id === 'ps-w') preview(); });
       psOv.addEventListener('click', function(e){
         if(e.target === psOv || e.target.closest('[data-x]')){ close(); return; }
+        var cw = e.target.closest('[data-who]');
+        if(cw){ T('ps-w').value = cw.dataset.who; preview(); return; }
         if(e.target.closest('[data-clip]')){
           try{
             navigator.clipboard.readText().then(function(t){ T('ps-t').value = t; preview(); })
@@ -654,7 +703,10 @@ App.registerTool({
           }catch(err){ api.toast('Tidak bisa baca clipboard, tempel manual saja'); }
           return;
         }
-        if(e.target.closest('#ps-go') && cur.length){ var l = cur; close(); addParsed(l); }
+        if(e.target.closest('#ps-go') && cur.length){
+          var l = cur, w = whoNow(); lastTitip = cleanName(T('ps-w').value);
+          close(); addTitip(l, w);
+        }
       });
       root.appendChild(psOv);
       T('ps-t').focus();
@@ -669,7 +721,7 @@ App.registerTool({
         var ex = hist[nk];
         if(ex){ h.n = (h.n || 0) + (ex.n || 0); h.last = Math.max(h.last || 0, ex.last || 0); }
         hist[nk] = h; delete hist[oldKey];
-        items.forEach(function(i){ if(!i.done && norm(i.name) === oldKey) i.name = nm; });
+        items.forEach(function(i){ if(!i.done && !i.titip && norm(i.name) === oldKey) i.name = nm; });
         st.set(items);
       }
       hst.set(hist); render();
@@ -679,6 +731,11 @@ App.registerTool({
       var it = items.find(function(i){ return i.id === id; }); if(!it) return;
       var snap = JSON.stringify(items), nm = cleanName(v.name);
       it.name = nm; it.qty = v.qty > 0 ? v.qty : 1; it.price = v.price || 0;
+      if(it.titip){                      // titipan tidak masuk riwayat/kategori
+        it.titip = canonWho(v.who, id) || it.titip; commit();
+        api.toast('Barang diubah', function(){ items = JSON.parse(snap); commit(); });
+        return;
+      }
       var k = norm(nm), h = hist[k];
       if(!h){ h = hist[k] = { name: nm, n: 1, qty: it.qty, price: it.price, last: Date.now() }; }
       else{ h.name = nm; if(it.price) h.price = it.price; }
@@ -687,7 +744,7 @@ App.registerTool({
     }
     function editItem(id){
       var it = items.find(function(i){ return i.id === id; }); if(!it) return;
-      openEdit({ title: 'Ubah barang', name: it.name, qty: it.qty, price: it.price, cat: itemCat(it), onSave: function(v){ saveItem(id, v); } });
+      openEdit({ title: it.titip ? 'Ubah barang titipan' : 'Ubah barang', name: it.name, qty: it.qty, price: it.price, cat: it.titip ? null : itemCat(it), nocat: !!it.titip, who: it.titip || null, onSave: function(v){ saveItem(id, v); } });
     }
 
     /* --- sheet ubah barang (nama, jumlah, harga, kategori) --- */
@@ -700,9 +757,10 @@ App.registerTool({
         '<div class="vs-l">Nama barang</div><input class="vs-key" id="ed-n" value="' + api.esc(spec.name) + '" autocomplete="off">' +
         (spec.qty != null ? '<div class="vs-l">Jumlah</div><input class="vs-key" id="ed-q" inputmode="numeric" value="' + spec.qty + '">' : '') +
         '<div class="vs-l">Harga satuan (opsional)</div><input class="vs-key" id="ed-p" inputmode="numeric" placeholder="0" value="' + (spec.price || '') + '">' +
-        '<div class="vs-l">Kategori</div><select class="vs-key" id="ed-c">' + CAT_ORDER.map(function(n){
+        (spec.nocat ? '' : '<div class="vs-l">Kategori</div><select class="vs-key" id="ed-c">' + CAT_ORDER.map(function(n){
           return '<option' + (n === cur ? ' selected' : '') + '>' + api.esc(n) + '</option>';
-        }).join('') + '</select>' +
+        }).join('') + '</select>') +
+        (spec.who != null ? '<div class="vs-l">Titipan dari</div><input class="vs-key" id="ed-w" maxlength="24" autocomplete="off" value="' + api.esc(spec.who) + '">' : '') +
         '<button class="vs-ok" data-save="1">Simpan</button>' +
         '<button class="vs-o" data-x="1" style="margin-top:8px;text-align:center">Batal</button></div>';
       var E = function(id){ return edOv.querySelector('#' + id); };
@@ -715,7 +773,7 @@ App.registerTool({
           var qty = null;
           if(spec.qty != null){ qty = parseInt(E('ed-q').value, 10); if(!(qty > 0)) qty = 1; }
           var price = parseInt(String(E('ed-p').value).replace(/\D/g, ''), 10) || 0;
-          var v = { name: nm, qty: qty, price: price, cat: E('ed-c').value };
+          var v = { name: nm, qty: qty, price: price, cat: spec.nocat ? null : E('ed-c').value, who: spec.who != null ? cleanName(E('ed-w').value) : null };
           close(); spec.onSave(v);
         }
       });
@@ -844,7 +902,7 @@ App.registerTool({
         var g = groupsOf(keys);
         if(tab !== 'all' && !g[tab]) tab = 'all';
         var inList = {};
-        items.forEach(function(i){ if(!i.done) inList[norm(i.name)] = i.qty; });
+        items.forEach(function(i){ if(!i.done && !i.titip) inList[norm(i.name)] = i.qty; });
         var tabsEl = H('hs-tabs'), tl = tabsEl.scrollLeft;
         var tabs = '<button class="hs-tab' + (tab === 'all' ? ' on' : '') + '" data-tab="all">Semua<small>' + keys.length + '</small></button>';
         CAT_ORDER.forEach(function(c){
@@ -904,7 +962,7 @@ App.registerTool({
         }
         if(e.target.closest('[data-add]') && sel && hist[sel]){
           readQty();
-          var h = hist[sel], k2 = sel, ex = items.filter(function(x){ return !x.done && norm(x.name) === k2; })[0];
+          var h = hist[sel], k2 = sel, ex = items.filter(function(x){ return !x.done && !x.titip && norm(x.name) === k2; })[0];
           if(ex){ ex.qty += oq; commit(); }
           else{ push(h.name, oq, h.price || 0, true); }
           added[k2] = (added[k2] || 0) + oq;
@@ -920,7 +978,7 @@ App.registerTool({
       drawBody(); drawFoot();
     }
     L('b-hs').onclick = openHistory;
-    L('b-ps').onclick = openPaste;
+    L('b-ps').onclick = openTitip;
     L('b-ct').onclick = openCats;
 
     /* ruang kosong di bawah daftar = tinggi bar input (otomatis ikut berubah) */
@@ -937,7 +995,7 @@ App.registerTool({
       /* aksi di menu ⋯ */
       menu: [
         { label: 'Riwayat barang', run: openHistory },
-        { label: 'Tempel daftar', run: openPaste },
+        { label: 'Titip belanja', run: openTitip },
         { label: 'Kelola kategori', run: openCats },
         { label: 'Ganti suara', run: openVoiceSettings },
         { label: 'Hapus yang sudah dibeli', run: function(){ var u = undoable('Yang sudah dibeli dihapus'); items = items.filter(function(i){ return !i.done; }); commit(); u(); } },
@@ -963,9 +1021,10 @@ App.registerTool({
         text: function(){
           var lines = ['🛒 Daftar belanja — ' + tanggal, ''];
           var fmt = function(i){ return (i.done ? '☑ ' : '☐ ') + i.name + ' ' + i.qty + '×' + (i.price ? ' (' + api.rp(i.price * i.qty) + ')' : ''); };
+          var main = items.filter(function(i){ return !i.titip; });
           if(pref.group){
             var g = {};
-            items.forEach(function(i){ var c = itemCat(i); if(CAT_ORDER.indexOf(c) < 0) c = 'Lainnya'; (g[c] = g[c] || []).push(i); });
+            main.forEach(function(i){ var c = itemCat(i); if(CAT_ORDER.indexOf(c) < 0) c = 'Lainnya'; (g[c] = g[c] || []).push(i); });
             CAT_ORDER.forEach(function(c){
               if(!g[c]) return;
               lines.push('▸ ' + c);
@@ -973,9 +1032,20 @@ App.registerTool({
               lines.push('');
             });
           }else{
-            items.forEach(function(i){ lines.push(fmt(i)); });
+            main.forEach(function(i){ lines.push(fmt(i)); });
           }
-          if(total() > 0){ if(lines[lines.length - 1] !== '') lines.push(''); lines.push('Total estimasi: ' + api.rp(total())); }
+          var who = [];
+          items.forEach(function(i){ if(i.titip && who.indexOf(i.titip) < 0) who.push(i.titip); });
+          who.forEach(function(w){
+            var arr = items.filter(function(i){ return i.titip === w; }), sub = sumOf(arr);
+            if(lines[lines.length - 1] !== '') lines.push('');
+            lines.push('📦 ' + (w === 'Titipan' ? 'Titipan' : 'Titipan ' + w) + (sub ? ' — ' + api.rp(sub) : ''));
+            arr.forEach(function(i){ lines.push(fmt(i)); });
+          });
+          if(total() > 0){
+            if(lines[lines.length - 1] !== '') lines.push('');
+            lines.push('Total estimasi' + (who.length ? ' (belanja sendiri)' : '') + ': ' + api.rp(total()));
+          }
           return lines.join('\n');
         }
       }
